@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>CodeAlpha URL Shortener</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 60px auto; padding: 20px; text-align: center; }
+        input[type="url"] { width: 70%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 12px 20px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        #result { margin-top: 25px; padding: 15px; background: #e9ecef; border-radius: 4px; display: none; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <h2>اختصار الروابط - CodeAlpha</h2>
+    <form id="shorten-form">
+        <input type="url" id="longUrl" placeholder="أدخل الرابط الطويل هنا..." required>
+        <button type="submit">اختصار</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('shorten-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const urlInput = document.getElementById('longUrl').value;
+            const res = await fetch('/api/shorten/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ original_url: urlInput })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `<strong>الرابط المختصر:</strong> <a href="${data.short_url}" target="_blank">${data.short_url}</a>`;
+            } else {
+                alert('حدث خطأ أثناء اختصار الرابط.');
+            }
+        });
+    </script>
+</body>
+</html>
