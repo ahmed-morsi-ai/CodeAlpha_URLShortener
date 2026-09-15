@@ -1,16 +1,14 @@
-﻿from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+from django.db.models import F
 from django.shortcuts import get_object_or_404, redirect, render
-from .models import URL
-from .serializers import URLSerializer
-
-def index(request):
-    return render(request, 'shortener/index.html')
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .models import ShortenedURL
+from .serializers import ShortenURLSerializer
 
 class ShortenURLView(APIView):
     def post(self, request):
-        serializer = URLSerializer(data=request.data, context={'request': request})
+        serializer = ShortenURLSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -18,7 +16,15 @@ class ShortenURLView(APIView):
 
 class RedirectURLView(APIView):
     def get(self, request, short_code):
-        url_obj = get_object_or_404(URL, short_code=short_code)
-        url_obj.clicks_count += 1
-        url_obj.save()
+        url_obj = get_object_or_404(ShortenedURL, short_code=short_code)
+        ShortenedURL.objects.filter(pk=url_obj.pk).update(clicks=F('clicks') + 1)
         return redirect(url_obj.original_url)
+
+class URLAnalyticsView(APIView):
+    def get(self, request, short_code):
+        url_obj = get_object_or_404(ShortenedURL, short_code=short_code)
+        serializer = ShortenURLSerializer(url_obj)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+def index_view(request):
+    return render(request, 'shortener/index.html')
